@@ -1879,7 +1879,7 @@ function closeQuoteModal(e) {
 }
 
 // ===== FORM SUBMISSIONS (spinner + animated success) =====
-function handleSubmit(formId, successId, btnId) {
+async function handleSubmit(formId, successId, btnId) {
     const form = document.getElementById(formId);
     const success = document.getElementById(successId);
     const btn = document.getElementById(btnId);
@@ -1888,13 +1888,33 @@ function handleSubmit(formId, successId, btnId) {
     btn.disabled = true;
     btn.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span>Sending...';
 
-    setTimeout(() => {
-        form.classList.add('hidden');
-        success.classList.remove('hidden');
-        success.classList.add('success-pop');
+    const formData = new FormData(form);
+    
+    formData.append("access_key", "93bf2d71-43af-4ed9-9397-fad1c3087adf");
+    formData.append("subject", formId === 'contact-form' ? "New Contact Form Submission" : "New Quote Request");
+    formData.append("from_name", "UNDERSUN Cabinets & Remodeling Website");
+
+    try {
+        const response = await fetch("https://api.web3forms.com/submit", {
+            method: "POST",
+            body: formData
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            form.classList.add('hidden');
+            success.classList.remove('hidden');
+            success.classList.add('success-pop');
+        } else {
+            alert("Something went wrong: " + (data.message || "Please try again later."));
+        }
+    } catch (error) {
+        console.error("Form submission error:", error);
+        alert("Network error. Please check your internet connection and try again.");
+    } finally {
         btn.disabled = false;
         btn.textContent = originalLabel;
-    }, 1500);
+    }
 }
 
 function submitContactForm(e) {
